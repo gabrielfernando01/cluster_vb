@@ -4,8 +4,8 @@
 
 Recursos:
 
-- Host (Kubuntu):
-  - Hardware: HP Laptop 15-ef1501la, 16 GB RAM (12 GB para el clúster), 130 GB SSD (100 GB para la VM).
+- Host (192.168.0.102):
+  - Hardware: 12 GB RAM, 100 GB SSD.
   - CPU: AMD Athlon Silver 3050U (2 núcleos) @ 2.3 GHz.
   - SO: Kubuntu 24.04.2, Kernel 6.8.0-52-generic.
   - Software:
@@ -13,9 +13,10 @@ Recursos:
     - Scala: 2.13.8 ($SCALA_HOME: /usr/local/share/scala).
     - Maven: 3.8.7 (/usr/share/maven).
     - sbt: 1.10.7.
-    - Spark: 3.5.1 (/opt/spark).
+    - Spark: 4.0 (/opt/spark).
     - IDE: IntelliJ IDEA 24.1.
-- VM (Debian):
+
+- VM (192.168.0.103):
   - Hardware: 4 GB RAM, 30 GB almacenamiento.
   - SO: Debian GNU/Linux 12, Kernel 6.1.0-37-amd64.
   - Software: Sin Java, Scala, Spark, Maven ni sbt instalados.
