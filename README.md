@@ -1,12 +1,12 @@
 ![](https://raw.githubusercontent.com/gabrielfernando01/cluster_vb/main/image/cover.png)
 
-# Cluster Kubuntu (host) - Debian (virtual machine).
+# Cluster Master (host) - worker (virtual machine).
 
 Recursos:
 
 - Host (192.168.0.102):
   - Hardware: 12 GB RAM, 100 GB SSD.
-  - CPU: AMD Athlon Silver 3050U (2 núcleos) @ 2.3 GHz.
+  - CPU: AMD Athlon Silver 3050U (1 núcleos) @ 2.3 GHz.
   - SO: Kubuntu 24.04.2, Kernel 6.8.0-52-generic.
   - Software:
     - Java: OpenJDK 11.0.26 ($JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64).
@@ -18,6 +18,7 @@ Recursos:
 
 - VM (192.168.0.103):
   - Hardware: 4 GB RAM, 30 GB almacenamiento.
+  - CPU: AMD Athlon Silver 3050U (1 núcleos) @ 2.3 GHz.
   - SO: Debian GNU/Linux 12, Kernel 6.1.0-37-amd64.
   - Software: Sin Java, Scala, Spark, Maven ni sbt instalados.
 
