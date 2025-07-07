@@ -9,24 +9,124 @@ Recursos:
   - CPU: AMD Athlon Silver 3050U (1 núcleos) @ 2.3 GHz.
   - SO: Kubuntu 24.04.2, Kernel 6.8.0-52-generic.
   - Software:
-    - Java: OpenJDK 11.0.26 ($JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64).
-    - Scala: 2.13.8 ($SCALA_HOME: /usr/local/share/scala).
+  	- Java: OpenJDK 17.0.15 ($JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64).
+    - Spark: 4.0 (/opt/spark).
     - Maven: 3.8.7 (/usr/share/maven).
     - sbt: 1.10.7.
-    - Spark: 4.0 (/opt/spark).
     - IDE: IntelliJ IDEA 24.1.
 
-- VM (192.168.0.103):
+- Virtual Machine (192.168.0.103):
   - Hardware: 4 GB RAM, 30 GB almacenamiento.
   - CPU: AMD Athlon Silver 3050U (1 núcleos) @ 2.3 GHz.
   - SO: Debian GNU/Linux 12, Kernel 6.1.0-37-amd64.
-  - Software: Sin Java, Scala, Spark, Maven ni sbt instalados.
+  - Software:
+	  + Java: OpenJDK 17.0.15 ($JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64).
+	  + Spark: 4.0 (/opt/spark).
 
 **Nota**: Como la VM solo será un nodo slave (worker), solo necesita Java y Spark. No es necesario instalar Scala, Maven ni sbt en la VM, ya que estos se usan principalmente para desarrollo, no para ejecutar workers.
 
 ***
 
-**⚙️ Configuración paso a paso**
+### 🔥 Revisar recursos del sistema**:
+
+**Configuración de la red local**
+
+Muestra la IPs locales con:
+
+bash
+```
+hostname -I
+```
+
+ip_machine_host: xxx.xxx.x.xxx
+ip_machine_worker: xxx.xxx.x.xxx
+
+1. Conectividad básica
+
+Desde master(host) al worker(vm) y del worker al master(host).
+
+bash
+```
+$ ping <ip_machine_host>
+$ ping <ip_machine_worker>
+```
+
+2. Comprobar el estado del servicio SSH en el host. Verifica si el servicio SSH está activo en el host:
+
+bash
+```
+$ sudo systemctl status sshd
+```
+
+Si no está activo, inícialo:
+
+bash
+```
+$ sudo systemctl start sshd
+$ sudo systemctl enable sshd
+```
+
+3. Verificar si OpenSSH está instalado
+$ dpkg -l | grep openssh-server
+
+Si no está instalado, instálalo ejecutando:
+$ sudo apt update
+$ sudo apt install openssh-server
+
+Volvemos a comprobar el estado del servicio ssh
+$ sudo systemctl status ssh
+
+4. Configurar el firewall en host
+
+Asegúrate de que el puerto 22 (SSH) y los puertos utilizados por Spark (como 7077 y otros dinámicos) estén abiertos en el firewall del host.
+
+UFW (firewall predeterminado en Ubuntu/Kubuntu):
+
+bash
+```
+sudo ufw allow 22/tcp
+sudo ufw allow 7077/tcp
+sudo ufw allow 4040-4050/tcp  # Puertos dinámicos típicos de Spark
+sudo ufw reload
+```
+
+5. Configurar Spark para evitar problemas de rsync
+
+Modificar el fichero del host: /opt/spark/conf/spark-env.sh
+
+bash
+```
+cd /opt/spark/conf/
+cp spark-env.sh.templeate cp spark-env.sh
+```
+
+texto
+```
+export SPARK_WORKER_INSTANCES=1
+export SPARK_MASTER_IP=<ip_machine_host>
+export SPARK_MASTER_PORT=7077
+export SPARK_MASTER_WEBUI_PORT=8080
+export SPARK_WORKER_CORES=<#_cores>  	# Ajusta según tus recursos
+export SPARK_WORKER_MEMORY=<#_memory>	# Ajusta según tus recursos
+```
+
+Modificar el fichero del slave(vm): /opt/spark/conf/spark-env.sh
+
+texto
+```
+export SPARK_MASTER_HOST=<ip_machine_host>
+export SPARK_MASTER_PORT=7077
+# Directorio donde se guardarán logs y trabajos
+export SPARK_LOG_DIR=/opt/spark/logs
+export SPARK_WORKER_DIR=/opt/spark/work/
+export SPARK_WORKER_CORES=<#_cores>
+export SPARK_WORKER_MEMORY=<memory_worker>
+# Directorio temporal de Spark
+export SPARK_LOCAL_DIRS=/opt/spark/tmp
+```
+
+**⚙️ Configuración de la Virtual Machine**
+
 **Paso 1: Configurar la red entre «Host» y «VM»**.
 
 Para que el master (host) y el slave (VM) se comuniquen, usa una red **Bridge Adapter en VirtualBox**:
@@ -38,47 +138,19 @@ Para que el master (host) y el slave (VM) se comuniquen, usa una red **Bridge Ad
 - Selecciona la interfaz de red del host (por ejemplo, <code>wlan0</code> para Wi-Fi o <code>eth0</code> para Ethernet).
 3. Inicial la VM y verifica la IP local.
 
-bash
-```
-hostname -I
-```
-
-Anota la IP de la VM.
-
-4. Desde el host, verifica la conectividad:
-
-bash
-```
-ping <ip_local_vm>
-```
-
-5. Desde la VM, haz ping al host.
-
-bash
-```
-ping <ip_local_host>
-```
-
-6. Asegúrate de que los puertos <code>7077</code> (master), <code>8080</code> (web UI del master), y <code>8081</code> (web UI del worker) estén abiertos. En ambas máquinas, si usas un firewall:
-
-bash
-```
-sudo ufw allow 7077
-sudo ufw allow 8080
-sudo ufw allow 8081
-```
+![](https://raw.githubusercontent.com/gabrielfernando01/cluster_vb/main/image/bridge_adapter.png)
 
 ***
 **Paso 2: Instalar software en la VM (Debian 12)**.
 
 La VM solo necesita Java y Spark para actuar como nodo slave.
 
-1. **Instalar Java (OpenJDK 11)**:
+1. **Instalar Java (OpenJDK 17)**:
 
 bash
 ```
 sudo apt update
-sudo apt install openjdk-11-jdk
+sudo apt install openjdk-17-jdk
 ```
 
 Verifica
@@ -92,11 +164,11 @@ Configura <code>$JAVA_HOME</code> en <code>~/.bahsrc</code>:
 
 bash
 ```
-echo 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64' >> ~/.bashrc
+echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
 source ~/.bashrc
 ``` 
 
-2. **Instalar Spark 3.5.1**: Descarga la misma versión que en el host para evitar incompatibilidades:
+2. **Instalar Spark 4.0**: Descarga la misma versión que en el host para evitar incompatibilidades:
 
 bash
 ```
