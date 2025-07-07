@@ -27,27 +27,34 @@ Recursos:
 
 ***
 
-### 🔥 Revisar recursos del sistema**:
+### 🔥 Revisar recursos del sistema:
 
 **Configuración de la red local**
 
-Muestra la IPs locales con:
+Muestra la IPs locales(privadas) con:
 
 bash
 ```
 hostname -I
 ```
 
-ip_machine_host: xxx.xxx.x.xxx
-ip_machine_worker: xxx.xxx.x.xxx
+ip_local_host: xxx.xxx.x.xxx
+
+ip_local_worker: xxx.xxx.x.xxx
 
 1. Conectividad básica
 
-Desde master(host) al worker(vm) y del worker al master(host).
+Desde la terminal en master(host) hacemos ping al worker(vm). 
 
 bash
 ```
-$ ping <ip_machine_host>
+$ ping <ip_local_worker>
+```
+
+Desde la terminal en worker(vm) hacemos ping al master(host).
+
+bash
+```
 $ ping <ip_machine_worker>
 ```
 
@@ -67,16 +74,28 @@ $ sudo systemctl enable sshd
 ```
 
 3. Verificar si OpenSSH está instalado
+
+bash
+```
 $ dpkg -l | grep openssh-server
+```
 
 Si no está instalado, instálalo ejecutando:
+
+bash
+```
 $ sudo apt update
 $ sudo apt install openssh-server
+```
 
 Volvemos a comprobar el estado del servicio ssh
-$ sudo systemctl status ssh
 
-4. Configurar el firewall en host
+bash
+```
+$ sudo systemctl status ssh
+```
+
+4. Configurar el firewall en el host.
 
 Asegúrate de que el puerto 22 (SSH) y los puertos utilizados por Spark (como 7077 y otros dinámicos) estén abiertos en el firewall del host.
 
@@ -92,7 +111,7 @@ sudo ufw reload
 
 5. Configurar Spark para evitar problemas de rsync
 
-Modificar el fichero del host: /opt/spark/conf/spark-env.sh
+Modificar el fichero del host(master) y del slave(wo) <code>/opt/spark/conf/spark-env.sh</code>
 
 bash
 ```
@@ -100,11 +119,13 @@ cd /opt/spark/conf/
 cp spark-env.sh.templeate cp spark-env.sh
 ```
 
+En el fichero <code>spark.env.sh</code> al final escribimos:
+
 texto
 ```
 export SPARK_WORKER_INSTANCES=1
 export SPARK_MASTER_IP=<ip_machine_host>
-export SPARK_MASTER_PORT=7077
+export SPARK_MASTER_PORT=7077			# Puerto por defecto
 export SPARK_MASTER_WEBUI_PORT=8080
 export SPARK_WORKER_CORES=<#_cores>  	# Ajusta según tus recursos
 export SPARK_WORKER_MEMORY=<#_memory>	# Ajusta según tus recursos
@@ -172,9 +193,9 @@ source ~/.bashrc
 
 bash
 ```
-wget https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
-tar -xzf spark-3.5.1-bin-hadoop3.tgz
-sudo mv spark-3.5.1-bin-hadoop3 /opt/spark
+wget https://dlcdn.apache.org/spark/spark-4.0.0/spark-4.0.0-bin-hadoop3.tgz
+tar -xzf spark-4.0.0-bin-hadoop3.tgz
+sudo mv spark-4.0.0-bin-hadoop3 /opt/spark
 ```
 
 Configura las variables de entorno en <code>~/.bashrc</code>:
@@ -186,28 +207,7 @@ echo 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-***
-**Paso 3: Configurar el nodo Master (Host - Kubuntu)**.
-
-1. Edita el archivo de configuración de Spark (<code>$SPARK_HOME/conf/spark-env.sh</code>):
-
-bash
-```
-cp $SPARK_HOME/conf/spark-env.sh.template $SPARK_HOME/conf/spark-env.sh
-nano $SPARK_HOME/conf/spark-env.sh
-```
-
-Agrega:
-
-```
-export SPARK_MASTER_HOST=<ip_local_host>
-export SPARK_MASTER_PORT=7077
-export SPARK_MASTER_WEBUI_PORT=8080
-export SPARK_WORKER_MEMORY=8g
-export SPARK_WORKER_CORES=1
-```
-
-2. Inicia el master:
+3. Inicia el master:
 
 bash
 ```
