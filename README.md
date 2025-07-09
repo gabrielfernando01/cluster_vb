@@ -1,6 +1,6 @@
 ![](https://raw.githubusercontent.com/gabrielfernando01/cluster_vb/main/image/cover.png)
 
-# Cluster Master (host) - worker (virtual machine).
+# 🎯 Cluster Spark - Master (host) - worker (virtual machine).
 
 Recursos:
 
@@ -9,8 +9,8 @@ Recursos:
   - CPU: AMD Athlon Silver 3050U (1 núcleos) @ 2.3 GHz.
   - SO: Kubuntu 24.04.2, Kernel 6.8.0-52-generic.
   - Software:
-  	- Java: OpenJDK 17.0.15 ($JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64).
-    - Spark: 4.0 (/opt/spark).
+  	- Java: OpenJDK 17.0.15 ($JAVA_HOME = /usr/lib/jvm/java-17-openjdk-amd64).
+    - Spark: 4.0 ($SPARK_HOME=/opt/spark).
     - Maven: 3.8.7 (/usr/share/maven).
     - sbt: 1.10.7.
     - IDE: IntelliJ IDEA 24.1.
@@ -21,7 +21,7 @@ Recursos:
   - SO: Debian GNU/Linux 12, Kernel 6.1.0-37-amd64.
   - Software:
 	  + Java: OpenJDK 17.0.15 ($JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64).
-	  + Spark: 4.0 (/opt/spark).
+	  + Spark: 4.0 ($SPARK_HOME=/opt/spark).
 
 **Nota**: Como la VM solo será un nodo slave (worker), solo necesita Java y Spark. No es necesario instalar Scala, Maven ni sbt en la VM, ya que estos se usan principalmente para desarrollo, no para ejecutar workers.
 
@@ -48,44 +48,44 @@ Desde la terminal en master(host) hacemos ping al worker(vm).
 
 bash
 ```
-$ ping <ip_local_worker>
+ping <ip_local_worker>
 ```
 
 Desde la terminal en worker(vm) hacemos ping al master(host).
 
 bash
 ```
-$ ping <ip_machine_worker>
+ping <ip_machine_worker>
 ```
 
 2. Comprobar el estado del servicio SSH en el host. Verifica si el servicio SSH está activo en el host:
 
 bash
 ```
-$ sudo systemctl status sshd
+sudo systemctl status sshd
 ```
 
 Si no está activo, inícialo:
 
 bash
 ```
-$ sudo systemctl start sshd
-$ sudo systemctl enable sshd
+sudo systemctl start sshd
+sudo systemctl enable sshd
 ```
 
 3. Verificar si OpenSSH está instalado
 
 bash
 ```
-$ dpkg -l | grep openssh-server
+dpkg -l | grep openssh-server
 ```
 
 Si no está instalado, instálalo ejecutando:
 
 bash
 ```
-$ sudo apt update
-$ sudo apt install openssh-server
+sudo apt update
+sudo apt install openssh-server
 ```
 
 Volvemos a comprobar el estado del servicio ssh
@@ -109,8 +109,6 @@ sudo ufw allow 4040-4050/tcp  # Puertos dinámicos típicos de Spark
 sudo ufw reload
 ```
 
-5. Configurar Spark para evitar problemas de rsync
-
 Modificar el fichero del host(master) y del slave(wo) <code>/opt/spark/conf/spark-env.sh</code>
 
 bash
@@ -131,20 +129,7 @@ export SPARK_WORKER_CORES=<#_cores>  	# Ajusta según tus recursos
 export SPARK_WORKER_MEMORY=<#_memory>	# Ajusta según tus recursos
 ```
 
-Modificar el fichero del slave(vm): /opt/spark/conf/spark-env.sh
 
-texto
-```
-export SPARK_MASTER_HOST=<ip_machine_host>
-export SPARK_MASTER_PORT=7077
-# Directorio donde se guardarán logs y trabajos
-export SPARK_LOG_DIR=/opt/spark/logs
-export SPARK_WORKER_DIR=/opt/spark/work/
-export SPARK_WORKER_CORES=<#_cores>
-export SPARK_WORKER_MEMORY=<memory_worker>
-# Directorio temporal de Spark
-export SPARK_LOCAL_DIRS=/opt/spark/tmp
-```
 
 **⚙️ Configuración de la Virtual Machine**
 
@@ -223,25 +208,34 @@ start-master.sh
 
 bash
 ```
-$SPARK_HOME/sbin/start-worker.sh spark://<ip_local_host>:7077
+start-worker.sh spark://<ip_local_host>:7077
 ```
 
 ***
-**Paso 4: Configurar el nodo Slave (VM - Debian)**.
+**Paso 4: Configurar el nodo worker (VM - Debian)**.
 
-1. Edita <code>$SPARK_HOME/conf/spark-env.sh</code> en la VM:
+Modificar el fichero del worker(vm) <code>/opt/spark/conf/spark-env.sh</code>
 
 bash
 ```
-cp $SPARK_HOME/conf/spark-env.sh.template $SPARK_HOME/conf/spark-env.sh
+cd /opt/spark/conf/
+cp spark-env.sh.templeate cp spark-env.sh
 nano $SPARK_HOME/conf/spark-env.sh
 ```
 
-Agrega:
+Modificar el fichero del slave(vm): /opt/spark/conf/spark-env.sh
 
+texto
 ```
-export SPARK_WORKER_MEMORY=3g
-export SPARK_WORKER_CORES=1
+export SPARK_MASTER_HOST=<ip_machine_host>
+export SPARK_MASTER_PORT=7077
+# Directorio donde se guardarán logs y trabajos
+export SPARK_LOG_DIR=/opt/spark/logs
+export SPARK_WORKER_DIR=/opt/spark/work/
+export SPARK_WORKER_CORES=<#_cores>
+export SPARK_WORKER_MEMORY=<memory_worker>
+# Directorio temporal de Spark
+export SPARK_LOCAL_DIRS=/opt/spark/tmp
 ```
 
 2. Inicia el worker y conéctalo al master:
@@ -250,3 +244,4 @@ bash
 ```
 $SPARK_HOME/sbin/start-worker.sh spark://<ip_local_host>:7077
 ```
+
