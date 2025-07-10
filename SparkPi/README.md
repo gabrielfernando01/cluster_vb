@@ -1,6 +1,6 @@
 ![](https://raw.githubusercontent.com/gabrielfernando01/cluster_vb/main/SparkPi/image/cover.png)
 
-# ☀️ Ejecutar un proyecto .jar en el spark cluster.
+# ☀️ Ejecutar un proyecto <code>.jar</code> en el spark cluster.
 
 ### Pasos para ejecutar el ejemplo <code>SparkPi</code> y reflejarlo en la UI del master
 
@@ -10,12 +10,14 @@
 
 bash
 ```
-spark-shell --verison
+spark-shell --version
 ```
 
 + **Configurar variables de entorno**
 
 en <code>~/.bashrc</code>
+
+texto:
 ```
 export SPARK_HOME=/ruta/a/tu/spark
 export PATH=$SPARK_HOME/bin:$PATH
@@ -86,4 +88,28 @@ text:
 Pi is roughly 3.14...
 ```
 
-+ Usaremos <code>spark-submit</code> para ejecutar <code>SparkPi</code> desde <code>.jar</code>
+**Confirmamos el estado del cluster**
+
+1. Inicializamos master, worker1 (master), worker2 (virtual machine), worker3.
+
+2. Ejecutar <code>SparkPi</code> con conexión al master:
+
++ Usaremos <code>spark-submit</code> para ejecutar <code>SparkPi</code> conectándo al master:
+
+```
+$SPARK_HOME/bin/spark-submit \
+  --class org.apache.spark.examples.SparkPi \
+  --master spark://192.168.0.103:7077 \
+  --conf spark.driver.host=192.168.0.103 \
+  --conf spark.driver.bindAddress=0.0.0.0 \
+  $SPARK_HOME/examples/jars/spark-examples_2.13-4.0.0.jar 1000
+```
+
+Deberia ver algo como: 
+
+text:
+```
+Pi is roughly 3.14...
+```
+
+![](https://raw.githubusercontent.com/gabrielfernando01/cluster_vb/main/SparkPi/image/ui_master.png)
