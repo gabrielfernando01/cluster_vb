@@ -109,7 +109,7 @@ sudo ufw allow 4040-4050/tcp  # Puertos dinámicos típicos de Spark
 sudo ufw reload
 ```
 
-Modificar el fichero del host(master) y del slave(wo) <code>/opt/spark/conf/spark-env.sh</code>
+Modificar el fichero del host(master) <code>/opt/spark/conf/spark-env.sh</code>
 
 bash
 ```
@@ -128,8 +128,6 @@ export SPARK_MASTER_WEBUI_PORT=8080
 export SPARK_WORKER_CORES=<#_cores>  	# Ajusta según tus recursos
 export SPARK_WORKER_MEMORY=<#_memory>	# Ajusta según tus recursos
 ```
-
-
 
 **⚙️ Configuración de la Virtual Machine**
 
@@ -163,7 +161,7 @@ Verifica
 
 bash
 ```
-java -verison
+java -version
 ```
 
 Configura <code>$JAVA_HOME</code> en <code>~/.bahsrc</code>:
